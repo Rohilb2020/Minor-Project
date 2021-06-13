@@ -35,11 +35,15 @@ function Pages({ username }) {
         return vars;
     };
 
-    var date = null;
-    var date_to = null;
+    // var date = null;
+    const [date, setDate] = useState("");
+    const [date_to, setDateTo] = useState("");
+    const [air, setAir] = useState({});
 
-    var month = null;
-    var month_to = null;
+    // var month = null;
+    // var month_to = null;
+    const [month, setMonth] = useState("");
+    const [month_to, setMonthTo] = useState("");
     console.log("1" + month);
     console.log("2" + month_to);
 
@@ -70,29 +74,59 @@ function Pages({ username }) {
                             // <img id="poster" src="${response.data.images.jpg.large_image_url}" />`;
                             //     $("#poster_container").html(poster_container_div);
 
-                            console.log(animes);
-                            console.log(response.data.images);
-                            date = new Date(
-                                response.data.aired.prop.from.year,
-                                response.data.aired.prop.from.month - 1,
-                                response.data.aired.prop.from.day
+                            console.log(animes.aired);
+                            setAir(animes.aired);
+                            console.log(air.from);
+
+                            setDate(
+                                new Date(
+                                    response.data.aired.prop.from.year,
+                                    response.data.aired.prop.from.month - 1,
+                                    response.data.aired.prop.from.day
+                                )
                             );
-                            date_to = new Date(
-                                response.data.aired.prop.to.year,
-                                response.data.aired.prop.to.month - 1,
-                                response.data.aired.prop.to.day
+                            setDateTo(
+                                new Date(
+                                    response.data.aired.prop.to.year,
+                                    response.data.aired.prop.to.month - 1,
+                                    response.data.aired.prop.to.day
+                                )
                             );
-                            month = date.toLocaleString("default", {
-                                month: "long",
-                            });
-                            month_to = date_to.toLocaleString("default", {
-                                month: "long",
-                            });
+                            setMonth(
+                                date.toLocaleString("default", {
+                                    month: "long",
+                                })
+                            );
+                            setMonthTo(
+                                date_to.toLocaleString("default", {
+                                    month: "long",
+                                })
+                            );
                             console.log("1" + month);
                             console.log("2" + month_to);
                         },
                     });
+                    await $.ajax({
+                        dataType: "json",
+                        method: "get",
+                        url: `https://api.jikan.moe/v4/anime/${mal_id}/recommendations`,
+                        success: function (responses) {
+                            let output = "";
+                            $.each(responses.data, function (i, recomm) {
+                                console.log(recomm.entry);
+                                output += `<div class="anime_posters_conatiner"><img class="anime_posters"  id="${recomm.entry.mal_id}"src="${recomm.entry.images.jpg.image_url}" title="${recomm.entry.title}"></div>`;
+                                return i < 4;
+                            });
+                            // console.log(response);
+                            $("#recommendations_tab").html(output);
+                        },
+                    });
                 }
+            });
+            $("#recommendations_tab").on("click", "div img", function () {
+                console.log($(this).attr("id"));
+                var id_img = $(this).attr("id");
+                window.location.href = `http://localhost:3000/pages/${id_img}/?id=${id_img}`;
             });
         };
         getan();
@@ -142,9 +176,11 @@ function Pages({ username }) {
 
                     <div className="start_date">
                         <p className="statistics_heading">Start Date</p>
-                        {animes.aired.prop.from.day ? (
+                        {animes?.aired?.prop?.from?.day ? (
                             <span>
-                                {month} {animes.aired.prop.from.day},{" "}
+                                {animes.aired.prop.from.day}/
+                                {animes.aired.prop.from.month}
+                                {"/"}
                                 {animes.aired.prop.from.year}
                             </span>
                         ) : (
@@ -154,24 +190,30 @@ function Pages({ username }) {
 
                     <div className="end_date">
                         <p className="statistics_heading">End Date</p>
-                        {animes.aired.prop.to.day ? (
+                        {animes?.aired?.prop?.to?.day ? (
                             <span>
-                                {month_to} {animes.aired.prop.to.day},{" "}
+                                {animes.aired.prop.to.day}/
+                                {animes.aired.prop.to.month}
+                                {"/"}
                                 {animes.aired.prop.to.year}
                             </span>
                         ) : (
-                            <span>Ongoing</span>
+                            <span>
+                                <i>NA</i>
+                            </span>
                         )}
                     </div>
 
                     <div className="season">
                         <p className="statistics_heading">Season</p>
-                        {animes.aired.prop.from.year && animes.season ? (
+                        {animes?.aired?.prop?.from?.year && animes.season ? (
                             <span>
                                 {animes.season}, {animes.aired.prop.from.year}
                             </span>
                         ) : (
-                            " "
+                            <span>
+                                <i>NA</i>
+                            </span>
                         )}
                     </div>
 
@@ -245,12 +287,21 @@ function Pages({ username }) {
 
                     <div id="score">
                         <p className="content_headings">Rating</p>
-                        <span
-                            className="genre"
-                            style={{ backgroundColor: "#00e600" }}
-                        >
-                            {animes.score}
-                        </span>
+                        {animes.score ? (
+                            <span
+                                className="genre"
+                                style={{ backgroundColor: "#00e600" }}
+                            >
+                                {animes.score}
+                            </span>
+                        ) : (
+                            <span
+                                className="genre"
+                                style={{ backgroundColor: "grey" }}
+                            >
+                                <i>NA</i>
+                            </span>
+                        )}
                     </div>
 
                     {animes.broadcast ? (
@@ -258,11 +309,17 @@ function Pages({ username }) {
                             <p className="content_headings">
                                 Broadcasting Schedule
                             </p>
-
-                            <span>
-                                <TodayIcon id="cal_icon" />
-                                {animes.broadcast.string}
-                            </span>
+                            {animes.broadcast.string ? (
+                                <span>
+                                    <TodayIcon id="cal_icon" />
+                                    {animes.broadcast.string}
+                                </span>
+                            ) : (
+                                <span>
+                                    <TodayIcon id="cal_icon" />
+                                    NA
+                                </span>
+                            )}
                         </div>
                     ) : (
                         "LOADING"
@@ -296,9 +353,10 @@ function Pages({ username }) {
                     ) : (
                         "LOADING"
                     )}
-                    {animes.licensors ? (
-                        <div id="licensors">
-                            <p className="content_headings">Licensors</p>
+
+                    <div id="licensors">
+                        <p className="content_headings">Licensors</p>
+                        {animes.licensors ? (
                             <p>
                                 {animes.licensors.map((licensor) => (
                                     <span className="genre licensor">
@@ -306,10 +364,16 @@ function Pages({ username }) {
                                     </span>
                                 ))}
                             </p>
-                        </div>
-                    ) : (
-                        "LOADING"
-                    )}
+                        ) : (
+                            <span
+                                className="genre"
+                                style={{ backgroundColor: "grey" }}
+                            >
+                                <i>NA</i>
+                            </span>
+                        )}
+                    </div>
+
                     <div className="video_container">
                         <button className="page_btn" id="launch_btn">
                             LAUNCH TRAILER
@@ -329,6 +393,10 @@ function Pages({ username }) {
                             Back
                         </button>
                     </div>
+                    <br></br>
+                    {/* recommendations container */}
+                    <p className="content_headings">Recommendations</p>
+                    <div id="recommendations_tab"></div>
                 </div>
             </div>
         </>

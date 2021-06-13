@@ -103,7 +103,7 @@ function Home({ username }) {
                     method: "get",
                     data: {
                         q: req_data,
-                        // rating: "pg",
+                        // rating: "g",
                     },
                     success: function (responses) {
                         // console.log(responses);
@@ -116,6 +116,12 @@ function Home({ username }) {
                         $("#anime_tab").html(output);
                     },
                 });
+            });
+
+            $("#anime_tab").on("click", "div img", function () {
+                console.log($(this).attr("id"));
+                var id_img = $(this).attr("id");
+                window.location.href = `http://localhost:3000/pages/${id_img}/?id=${id_img}`;
             });
         };
 
@@ -179,7 +185,7 @@ function Home({ username }) {
                                 alt=""
                                 onClick={() =>
                                     history.push(
-                                        `/page/${response.mal_id}/?id=${response.mal_id}&yid="${response.trailer.url}"&ban=${response.images.jpg.large_image_url}&title=${response.title}`
+                                        `/pages/${response.mal_id}/?id=${response.mal_id}&yid="${response.trailer.url}"&ban=${response.images.jpg.large_image_url}&title=${response.title}`
                                     )
                                 }
                             />
